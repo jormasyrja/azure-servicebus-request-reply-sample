@@ -3,6 +3,7 @@ This is a sample implementation of the request-response message bus pattern usin
 
 # Getting Started
 Setup environment (or local.settings.json) values:
+
 |Name|Description|
 |---|---|
 |ServiceBusConnectionString|Connection string/SAS with *full* (read,write,manage) rights to a ServiceBus namespace|
