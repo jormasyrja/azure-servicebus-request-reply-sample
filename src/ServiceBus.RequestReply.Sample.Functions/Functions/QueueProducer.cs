@@ -35,8 +35,7 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
 
             try
             {
-                var outboundMessage = new Message(JsonSerializer.SerializeToUtf8Bytes(request));
-                var response = await _requestReplyClient.Request<WorkQueueItemAcknowledgement>(_options.TargetQueueName, outboundMessage);
+                var response = await _requestReplyClient.Request<WorkQueueItemAcknowledgement>(_options.TargetQueueName, request);
 
                 _logger.LogInformation($"Received response: {response}");
 

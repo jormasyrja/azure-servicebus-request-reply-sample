@@ -28,7 +28,7 @@ namespace ServiceBus.RequestReply.Sample.Startup.Clients
             _options = options.Value;
         }
 
-        public async Task<T> Request<T>(string queueName, Message message) where T : class
+        public async Task<T> Request<T>(string queueName, object payload) where T : class
         {
             var temporaryQueueName = Guid.NewGuid().ToString();
             var temporaryQueueDescription = await _managementClient.CreateQueueAsync(temporaryQueueName);
@@ -42,8 +42,11 @@ namespace ServiceBus.RequestReply.Sample.Startup.Clients
 
             try
             {
-                message.ReplyTo = temporaryQueueName;
-                await requestClient.SendAsync(message);
+                var outboundMessage = new Message(JsonSerializer.SerializeToUtf8Bytes(payload))
+                {
+                    ReplyTo = temporaryQueueName
+                };
+                await requestClient.SendAsync(outboundMessage);
 
                 var reply = await receiverClient.ReceiveAsync(_options.RequestTimeout);
 
@@ -60,6 +63,6 @@ namespace ServiceBus.RequestReply.Sample.Startup.Clients
 
     public interface IServiceBusRequestReplyClient
     {
-        Task<T> Request<T>(string queueName, Message message) where T : class;
+        Task<T> Request<T>(string queueName, object payload) where T : class;
     }
 }
