@@ -22,6 +22,6 @@ On success, the API will respond with
 {
     "Id": "<GUID>",
     "timestamp": "<UTC timestamp of message received>",
-	"Name": <Name from request>
+    "Name": "<Name from request>"
 }
 ```
