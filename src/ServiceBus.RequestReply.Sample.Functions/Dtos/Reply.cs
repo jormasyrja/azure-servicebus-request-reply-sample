@@ -2,14 +2,15 @@
 
 namespace ServiceBus.RequestReply.Sample.Startup.Dtos
 {
-    public class WorkQueueItemAcknowledgement
+    public class Reply
     {
-        public Guid WorkId { get; set; }
+        public Guid Id { get; set; }
         public DateTime Timestamp { get; set; }
+        public string Name { get; set; }
 
         public override string ToString()
         {
-            return $"WorkId: {WorkId}, Timestamp: {Timestamp}";
+            return $"Id: {Id}, Timestamp: {Timestamp}, Name: {Name}";
         }
     }
 }

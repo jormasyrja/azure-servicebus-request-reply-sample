@@ -31,7 +31,7 @@ namespace ServiceBus.RequestReply.Sample.Startup
 
             builder.Services.Configure<RequestReplyClientOptions>(options =>
             {
-                options.RequestTimeOutMillis = configuration.GetValue<long>(EnvironmentVariableNames.RequestTimeoutMillis, Constants.DefaultRequestTimeoutMillis);
+                options.RequestTimeOutMillis = configuration.GetValue(EnvironmentVariableNames.RequestTimeoutMillis, Constants.DefaultRequestTimeoutMillis);
             });
 
             builder.Services.Configure<QueueProducerOptions>(options =>

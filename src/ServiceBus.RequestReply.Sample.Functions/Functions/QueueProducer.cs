@@ -29,13 +29,13 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
         [FunctionName("QueueProducer")]
         public async Task<IActionResult> PushMessageToQueue(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "messages")]
-            CreateWorkQueueItemRequest request)
+            Request request)
         {
             _logger.LogInformation($"Received request from API to create: {request}");
 
             try
             {
-                var response = await _requestReplyClient.Request<WorkQueueItemAcknowledgement>(_options.TargetQueueName, request);
+                var response = await _requestReplyClient.Request<Reply>(_options.TargetQueueName, request);
 
                 _logger.LogInformation($"Received response: {response}");
 

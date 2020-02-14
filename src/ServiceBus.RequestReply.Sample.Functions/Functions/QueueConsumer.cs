@@ -27,9 +27,9 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
             Message message)
         {
             var messageJson = Encoding.UTF8.GetString(message.Body);
-            var workQueueItem = JsonSerializer.Deserialize<CreateWorkQueueItemRequest>(messageJson);
+            var request = JsonSerializer.Deserialize<Request>(messageJson);
 
-            _logger.LogInformation($"Read message from queue: {workQueueItem}");
+            _logger.LogInformation($"Read message from queue: {request}");
 
             var replyQueueName = message.ReplyTo;
             if (string.IsNullOrWhiteSpace(replyQueueName))
@@ -38,10 +38,11 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
             }
 
             _logger.LogInformation($"Reply requested to queue {replyQueueName}");
-            var acknowledgement = new WorkQueueItemAcknowledgement
+            var acknowledgement = new Reply
             {
-                WorkId = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow
+                Id = Guid.NewGuid(),
+                Timestamp = DateTime.UtcNow,
+                Name = request.Name
             };
 
             var responseBytes = JsonSerializer.SerializeToUtf8Bytes(acknowledgement);

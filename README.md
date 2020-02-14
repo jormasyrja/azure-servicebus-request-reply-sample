@@ -14,13 +14,14 @@ Setup environment (or local.settings.json) values:
 
 There will be an HTTP trigger function at *http://localhost:7071/api/messages* that will accept a simple POST with a payload:
 ```json
-{ "name": "string", "Amount": integer, "DueDate": "20200127T23:00:00.0000000" }
+{ "name": "string" }
 ```
 
 On success, the API will respond with
 ```json
 {
-    "workId": "<GUID>",
-    "timestamp": "<UTC timestamp of message received>"
+    "Id": "<GUID>",
+    "timestamp": "<UTC timestamp of message received>",
+	"Name": <Name from request>
 }
 ```
