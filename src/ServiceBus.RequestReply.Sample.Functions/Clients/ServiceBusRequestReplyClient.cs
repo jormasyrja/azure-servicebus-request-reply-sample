@@ -31,11 +31,15 @@ namespace ServiceBus.RequestReply.Sample.Startup.Clients
         public async Task<T> Request<T>(string queueName, object payload) where T : class
         {
             var temporaryQueueName = Guid.NewGuid().ToString();
-            var temporaryQueueDescription = await _managementClient.CreateQueueAsync(temporaryQueueName);
-
+            
             var timeoutMillis = Math.Max(MinimumAutoDeleteOnIdleMillis, 2 * _options.RequestTimeOutMillis);
-            // AutoDelete in case of unexpected crash
-            temporaryQueueDescription.AutoDeleteOnIdle = TimeSpan.FromMilliseconds(timeoutMillis);
+            var autoDeleteOnIdleTimespan = TimeSpan.FromMilliseconds(timeoutMillis);
+
+            var temporaryQueueDescription = new QueueDescription(temporaryQueueName)
+            {
+                AutoDeleteOnIdle = autoDeleteOnIdleTimespan
+            };
+            await _managementClient.CreateQueueAsync(temporaryQueueDescription);
 
             var requestClient = _clientFactory.CreateSendClient(queueName, RetryPolicy.Default);
             var receiverClient = _clientFactory.CreateReceiverClient(temporaryQueueName, ReceiveMode.ReceiveAndDelete);
