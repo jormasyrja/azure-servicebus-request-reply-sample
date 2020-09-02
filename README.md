@@ -8,7 +8,7 @@ Setup environment (or local.settings.json) values:
 
 |Name|Description|
 |---|---|
-|ServiceBusConnectionString|Connection string/SAS with *full* (read,write,manage) rights to a ServiceBus namespace|
+|ServiceBusConnectionString|Connection string/SAS with *full* (read,write,manage) rights to a ServiceBus namespace (Standard or Premium tier, for Basic tier AutoDeleteOnIdle is not supported)|
 |QueueName|Name of an existing queue in the above namespace, which will be used for sending the *request*|
 |RequestTimeoutInMilliseconds|(Optional) Request timeout in milliseconds, i.e. how long to wait for the response|
 
