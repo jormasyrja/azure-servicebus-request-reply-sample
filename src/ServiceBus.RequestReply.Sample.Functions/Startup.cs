@@ -1,6 +1,6 @@
 ﻿using System;
+using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ServiceBus.RequestReply.Sample.Startup;
@@ -41,7 +41,7 @@ namespace ServiceBus.RequestReply.Sample.Startup
 
             builder.Services.AddSingleton<ServiceBusClientFactory>();
             builder.Services.AddScoped<IServiceBusRequestReplyClient, ServiceBusRequestReplyClient>();
-            builder.Services.AddSingleton(provider => new ManagementClient(serviceBusConnectionString));
+            builder.Services.AddSingleton<ServiceBusAdministrationClient>(_ => new ServiceBusAdministrationClient(serviceBusConnectionString));
         }
     }
 }

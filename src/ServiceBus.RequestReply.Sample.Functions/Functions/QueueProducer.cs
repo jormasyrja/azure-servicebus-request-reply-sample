@@ -1,8 +1,8 @@
-﻿using System.Net;
-using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
@@ -35,9 +35,13 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
 
             try
             {
-                var response = await _requestReplyClient.Request<Reply>(_options.TargetQueueName, request);
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
 
-                _logger.LogInformation($"Received response: {response}");
+                var response = await _requestReplyClient.Request<Reply>(_options.TargetQueueName, request);
+                stopwatch.Stop();
+
+                _logger.LogInformation($"Received response: {response}, took {stopwatch.ElapsedMilliseconds} ms");
 
                 return new OkObjectResult(response);
             }
