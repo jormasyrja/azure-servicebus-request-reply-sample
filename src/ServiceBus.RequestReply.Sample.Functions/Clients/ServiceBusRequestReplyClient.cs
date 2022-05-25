@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.ServiceBus.Management;
+using Azure.Messaging.ServiceBus;
+using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Extensions.Options;
 using ServiceBus.RequestReply.Sample.Startup.Factories;
 using ServiceBus.RequestReply.Sample.Startup.Options;
@@ -15,16 +15,16 @@ namespace ServiceBus.RequestReply.Sample.Startup.Clients
     public class ServiceBusRequestReplyClient : IServiceBusRequestReplyClient
     {
         private readonly ServiceBusClientFactory _clientFactory;
-        private readonly ManagementClient _managementClient;
+        private readonly ServiceBusAdministrationClient _administrationClient;
         private readonly RequestReplyClientOptions _options;
 
         // minimum allowed time for AutoDeleteOnIdle is 5 minutes
-        private readonly long MinimumAutoDeleteOnIdleMillis = 5 * 60 * 1000;
+        private const long MinimumAutoDeleteOnIdleMillis = 5 * 60 * 1000;
 
-        public ServiceBusRequestReplyClient(ServiceBusClientFactory clientFactory, ManagementClient managementClient, IOptions<RequestReplyClientOptions> options)
+        public ServiceBusRequestReplyClient(ServiceBusClientFactory clientFactory, ServiceBusAdministrationClient administrationClient, IOptions<RequestReplyClientOptions> options)
         {
             _clientFactory = clientFactory;
-            _managementClient = managementClient;
+            _administrationClient = administrationClient;
             _options = options.Value;
         }
 
@@ -35,32 +35,35 @@ namespace ServiceBus.RequestReply.Sample.Startup.Clients
             var timeoutMillis = Math.Max(MinimumAutoDeleteOnIdleMillis, 2 * _options.RequestTimeOutMillis);
             var autoDeleteOnIdleTimespan = TimeSpan.FromMilliseconds(timeoutMillis);
 
-            var temporaryQueueDescription = new QueueDescription(temporaryQueueName)
+            var createQueueOptions = new CreateQueueOptions(temporaryQueueName)
             {
-                AutoDeleteOnIdle = autoDeleteOnIdleTimespan
+                AutoDeleteOnIdle = autoDeleteOnIdleTimespan,
+                Name = temporaryQueueName
             };
-            await _managementClient.CreateQueueAsync(temporaryQueueDescription);
 
-            var requestClient = _clientFactory.CreateSendClient(queueName, RetryPolicy.Default);
-            var receiverClient = _clientFactory.CreateReceiverClient(temporaryQueueName, ReceiveMode.ReceiveAndDelete);
+            await _administrationClient.CreateQueueAsync(createQueueOptions);
+
+            var sender = _clientFactory.CreateSendClient(queueName);
+            var receiver = _clientFactory.CreateReceiverClient(temporaryQueueName);
 
             try
             {
-                var outboundMessage = new Message(JsonSerializer.SerializeToUtf8Bytes(payload))
+                var outboundMessage = new ServiceBusMessage(JsonSerializer.SerializeToUtf8Bytes(payload, Constants.DefaultJsonSerializerOptions))
                 {
                     ReplyTo = temporaryQueueName
                 };
-                await requestClient.SendAsync(outboundMessage);
+                await sender.SendMessageAsync(outboundMessage);
 
-                var reply = await receiverClient.ReceiveAsync(_options.RequestTimeout);
+                var reply = await receiver.ReceiveMessageAsync(_options.RequestTimeout);
 
                 return reply != null
-                    ? JsonSerializer.Deserialize<T>(reply.Body)
+                    ? JsonSerializer.Deserialize<T>(reply.Body, Constants.DefaultJsonSerializerOptions)
                     : null;
             }
             finally
             {
-                await _managementClient.DeleteQueueAsync(temporaryQueueName);
+                await _administrationClient.DeleteQueueAsync(temporaryQueueName)
+                    .ConfigureAwait(false);
             }
         }
     }

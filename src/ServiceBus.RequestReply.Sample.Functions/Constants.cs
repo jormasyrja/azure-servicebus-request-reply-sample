@@ -1,4 +1,7 @@
-﻿namespace ServiceBus.RequestReply.Sample.Startup
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace ServiceBus.RequestReply.Sample.Startup
 {
     public static class EnvironmentVariableNames
     {
@@ -10,5 +13,12 @@
     public static class Constants
     {
         public const long DefaultRequestTimeoutMillis = 2 * 60 * 1000;
+
+        public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() },
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 }

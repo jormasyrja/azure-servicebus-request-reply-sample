@@ -1,8 +1,7 @@
 using System;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Azure.ServiceBus;
+using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using ServiceBus.RequestReply.Sample.Startup.Dtos;
@@ -24,10 +23,14 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
         [FunctionName("QueueProcessor")]
         public async Task ConsumeFromQueue(
             [ServiceBusTrigger("%QueueName%", Connection = EnvironmentVariableNames.ServiceBusConnectionString)]
-            Message message)
+            ServiceBusReceivedMessage message)
         {
-            var messageJson = Encoding.UTF8.GetString(message.Body);
-            var request = JsonSerializer.Deserialize<Request>(messageJson);
+            var request = JsonSerializer.Deserialize<Request>(message.Body);
+            if (request == null)
+            {
+                // ignore empty message
+                return;
+            }
 
             _logger.LogInformation($"Read message from queue: {request}");
 
@@ -45,14 +48,14 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
                 Name = request.Name
             };
 
-            var responseBytes = JsonSerializer.SerializeToUtf8Bytes(acknowledgement);
-            var responseMessage = new Message(responseBytes)
+            var responseBytes = JsonSerializer.SerializeToUtf8Bytes(acknowledgement, Constants.DefaultJsonSerializerOptions);
+            var responseMessage = new ServiceBusMessage(responseBytes)
             {
                 ReplyToSessionId = message.SessionId
             };
 
             var queueClient = _clientFactory.CreateSendClient(replyQueueName);
-            await queueClient.SendAsync(responseMessage);
+            await queueClient.SendMessageAsync(responseMessage);
         }
     }
 }

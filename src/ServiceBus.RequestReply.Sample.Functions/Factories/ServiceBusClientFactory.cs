@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.ServiceBus.Core;
+using System.Collections.Concurrent;
+using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
 using ServiceBus.RequestReply.Sample.Startup.Options;
 
@@ -9,33 +9,38 @@ namespace ServiceBus.RequestReply.Sample.Startup.Factories
     /// <summary>
     /// Creates Queue/MessageReceiver clients, reusing the same connection.
     /// </summary>
-    public class ServiceBusClientFactory
+    public sealed class ServiceBusClientFactory
     {
-        private readonly ServiceBusConnection _connection;
+        private readonly ServiceBusClient _client;
+        private readonly ConcurrentDictionary<string, ServiceBusSender> _senderCache;
+        private readonly ConcurrentDictionary<string, ServiceBusReceiver> _receiverCache;
 
         public ServiceBusClientFactory(IOptions<ServiceBusConnectionOptions> options)
         {
-            _connection = new ServiceBusConnection(options.Value.ConnectionString);
+            _client = new ServiceBusClient(options.Value.ConnectionString);
+
+            _senderCache = new ConcurrentDictionary<string, ServiceBusSender>();
+            _receiverCache = new ConcurrentDictionary<string, ServiceBusReceiver>();
         }
 
-        public virtual IQueueClient CreateSendClient(string queueName, RetryPolicy retryPolicy = default)
+        public ServiceBusSender CreateSendClient(string queueName)
         {
             if (string.IsNullOrWhiteSpace(queueName))
             {
                 throw new ArgumentNullException(queueName);
             }
 
-            return new QueueClient(_connection, queueName, default, retryPolicy);
+            return _senderCache.GetOrAdd(queueName, qName => _client.CreateSender(qName));
         }
 
-        public virtual IMessageReceiver CreateReceiverClient(string queueName, ReceiveMode receiveMode = default)
+        public ServiceBusReceiver CreateReceiverClient(string queueName)
         {
             if (string.IsNullOrWhiteSpace(queueName))
             {
                 throw new ArgumentNullException(queueName);
             }
 
-            return new MessageReceiver(_connection, queueName, receiveMode);
+            return _receiverCache.GetOrAdd(queueName, qName => _client.CreateReceiver(qName));
         }
     }
 }
