@@ -1,7 +1,7 @@
 # Introduction 
 This is a sample implementation of the request-response message bus pattern using Azure Functions and Azure Service Bus.
-- .NET Core 3.1
-- Azure Functions v3
+- .NET 6
+- Azure Functions v4
 
 # Getting Started
 Setup environment (or local.settings.json) values:
