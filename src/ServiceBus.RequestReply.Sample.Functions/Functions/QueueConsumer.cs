@@ -54,7 +54,7 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
                 ReplyToSessionId = message.SessionId
             };
 
-            var queueClient = _clientFactory.CreateSendClient(replyQueueName);
+            await using var queueClient = _clientFactory.CreateSendClient(replyQueueName);
             await queueClient.SendMessageAsync(responseMessage);
         }
     }

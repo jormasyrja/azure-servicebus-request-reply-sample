@@ -43,8 +43,8 @@ namespace ServiceBus.RequestReply.Sample.Startup.Clients
 
             await _administrationClient.CreateQueueAsync(createQueueOptions);
 
-            var sender = _clientFactory.CreateSendClient(queueName);
-            var receiver = _clientFactory.CreateReceiverClient(temporaryQueueName);
+            await using var sender = _clientFactory.CreateSendClient(queueName);
+            await using var receiver = _clientFactory.CreateReceiverClient(temporaryQueueName);
 
             try
             {

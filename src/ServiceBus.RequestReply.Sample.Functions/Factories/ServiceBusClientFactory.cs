@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Options;
 using ServiceBus.RequestReply.Sample.Startup.Options;
@@ -9,20 +9,22 @@ namespace ServiceBus.RequestReply.Sample.Startup.Factories
     /// <summary>
     /// Creates Queue/MessageReceiver clients, reusing the same connection.
     /// </summary>
-    public sealed class ServiceBusClientFactory
+    public sealed class ServiceBusClientFactory : IAsyncDisposable
     {
         private readonly ServiceBusClient _client;
-        private readonly ConcurrentDictionary<string, ServiceBusSender> _senderCache;
-        private readonly ConcurrentDictionary<string, ServiceBusReceiver> _receiverCache;
 
         public ServiceBusClientFactory(IOptions<ServiceBusConnectionOptions> options)
         {
             _client = new ServiceBusClient(options.Value.ConnectionString);
-
-            _senderCache = new ConcurrentDictionary<string, ServiceBusSender>();
-            _receiverCache = new ConcurrentDictionary<string, ServiceBusReceiver>();
         }
 
+        /// <summary>
+        /// Creates a client for sending messages to a queue.
+        /// Caller should dispose the client after use
+        /// </summary>
+        /// <param name="queueName"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public ServiceBusSender CreateSendClient(string queueName)
         {
             if (string.IsNullOrWhiteSpace(queueName))
@@ -30,9 +32,16 @@ namespace ServiceBus.RequestReply.Sample.Startup.Factories
                 throw new ArgumentNullException(queueName);
             }
 
-            return _senderCache.GetOrAdd(queueName, qName => _client.CreateSender(qName));
+            return _client.CreateSender(queueName);
         }
 
+        /// <summary>
+        /// Creates a client for receiving messages from a queue.
+        /// Caller should dispose the client after use
+        /// </summary>
+        /// <param name="queueName"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public ServiceBusReceiver CreateReceiverClient(string queueName)
         {
             if (string.IsNullOrWhiteSpace(queueName))
@@ -40,7 +49,12 @@ namespace ServiceBus.RequestReply.Sample.Startup.Factories
                 throw new ArgumentNullException(queueName);
             }
 
-            return _receiverCache.GetOrAdd(queueName, qName => _client.CreateReceiver(qName));
+            return _client.CreateReceiver(queueName);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return _client.DisposeAsync();
         }
     }
 }
