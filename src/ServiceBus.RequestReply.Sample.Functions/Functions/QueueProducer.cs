@@ -3,13 +3,12 @@ using System.Net;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ServiceBus.RequestReply.Sample.Startup.Clients;
 using ServiceBus.RequestReply.Sample.Startup.Dtos;
 using ServiceBus.RequestReply.Sample.Startup.Options;
+using Microsoft.Azure.Functions.Worker;
 
 namespace ServiceBus.RequestReply.Sample.Startup.Functions
 {
@@ -26,12 +25,12 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
             _requestReplyClient = requestReplyClient;
         }
 
-        [FunctionName("QueueProducer")]
+        [Function("QueueProducer")]
         public async Task<IActionResult> PushMessageToQueue(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "messages")]
             Request request)
         {
-            _logger.LogInformation($"Received request from API to create: {request}");
+            _logger.LogInformation("Received request from API to create: {request}", request);
 
             try
             {
@@ -41,7 +40,7 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
                 var response = await _requestReplyClient.Request<Reply>(_options.TargetQueueName, request);
                 stopwatch.Stop();
 
-                _logger.LogInformation($"Received response: {response}, took {stopwatch.ElapsedMilliseconds} ms");
+                _logger.LogInformation("Received response: {response}, took {elapsedMilliseconds} ms", response, stopwatch.ElapsedMilliseconds);
 
                 return new OkObjectResult(response);
             }

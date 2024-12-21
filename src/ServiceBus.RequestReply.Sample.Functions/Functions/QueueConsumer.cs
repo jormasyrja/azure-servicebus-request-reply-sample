@@ -2,10 +2,10 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using ServiceBus.RequestReply.Sample.Startup.Dtos;
 using ServiceBus.RequestReply.Sample.Startup.Factories;
+using Microsoft.Azure.Functions.Worker;
 
 namespace ServiceBus.RequestReply.Sample.Startup.Functions
 {
@@ -20,7 +20,7 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
             _logger = logger;
         }
 
-        [FunctionName("QueueProcessor")]
+        [Function("QueueProcessor")]
         public async Task ConsumeFromQueue(
             [ServiceBusTrigger("%QueueName%", Connection = EnvironmentVariableNames.ServiceBusConnectionString)]
             ServiceBusReceivedMessage message)
@@ -32,7 +32,7 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
                 return;
             }
 
-            _logger.LogInformation($"Read message from queue: {request}");
+            _logger.LogInformation("Read message from queue: {request}", request);
 
             var replyQueueName = message.ReplyTo;
             if (string.IsNullOrWhiteSpace(replyQueueName))
@@ -40,7 +40,7 @@ namespace ServiceBus.RequestReply.Sample.Startup.Functions
                 return;
             }
 
-            _logger.LogInformation($"Reply requested to queue {replyQueueName}");
+            _logger.LogInformation("Reply requested to queue {replyQueueName}", replyQueueName);
             var acknowledgement = new Reply
             {
                 Id = Guid.NewGuid(),

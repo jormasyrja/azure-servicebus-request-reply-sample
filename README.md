@@ -1,7 +1,7 @@
 # Introduction 
 This is a sample implementation of the request-response message bus pattern using Azure Functions and Azure Service Bus.
-- .NET 6
-- Azure Functions v4
+- .NET 8
+- Azure Functions v4 / Isolated worker model
 
 # Getting Started
 Setup environment (or local.settings.json) values:
@@ -11,6 +11,8 @@ Setup environment (or local.settings.json) values:
 |ServiceBusConnectionString|Connection string/SAS with *full* (read,write,manage) rights to a ServiceBus namespace|
 |QueueName|Name of an existing queue in the above namespace, which will be used for sending the *request*|
 |RequestTimeoutInMilliseconds|(Optional) Request timeout in milliseconds, i.e. how long to wait for the response|
+
+**Note**: [ServiceBus emulator could be used.](https://learn.microsoft.com/en-us/azure/service-bus-messaging/overview-emulator)
 
 There will be an HTTP trigger function at *http://localhost:7071/api/messages* that will accept a simple POST with a payload:
 ```json

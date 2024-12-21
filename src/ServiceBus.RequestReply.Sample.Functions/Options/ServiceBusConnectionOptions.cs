@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ServiceBus.RequestReply.Sample.Startup.Options
+﻿namespace ServiceBus.RequestReply.Sample.Startup.Options
 {
     public class ServiceBusConnectionOptions
     {
